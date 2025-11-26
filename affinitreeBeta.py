@@ -54,8 +54,17 @@ def create_radial_bar_chart(df, node_index):
     angles = [(n / float(n_categories) * 2 * np.pi) + rotation_offset for n in range(n_categories)]
     angles += angles[:1]
 
-    max_value = max(values)
-    normalized_values = [value / max_value * 3 for value in values]
+    # Normalize values safely, even if they are all zeros
+    max_value = np.nanmax(values)
+
+    if not np.isfinite(max_value) or max_value <= 0:
+        # All zeros or invalid -> use a flat dummy ring so we don't get NaNs
+        normalized_values = [1.0] * len(values)
+    else:
+        normalized_values = [(value / max_value) * 3 for value in values]
+
+    max_norm = max(normalized_values)
+
 
     fig, ax = plt.subplots(figsize=(12, 8), subplot_kw={'polar': True})
 
@@ -71,7 +80,7 @@ def create_radial_bar_chart(df, node_index):
     plt.xticks(angles[:-1], categories, fontsize=12, fontweight='bold', color='gray')
     ax.set_yticklabels([])
 
-    ax.set_ylim(0, max(normalized_values) * 1.1)
+    ax.set_ylim(0, max_norm * 1.1 if max_norm > 0 else 1.0)
 
     ax.set_facecolor('#F5F5F5')
     ax.grid(color='gray', linestyle='--', linewidth=0.5, alpha=0.7)
