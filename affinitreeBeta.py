@@ -18,9 +18,16 @@ import plotly.offline as pyo
 
 print(os.getcwd())
 
-# your data path
-data_path = "Neuma_TCI_Score.csv"
-df = pd.read_csv(data_path)
+BASE_DATA_PATH = "Neuma_TCI_Score.csv"
+USER_DATA_PATH = "Neuma_TCI_Score_user.csv"
+
+df_base = pd.read_csv(BASE_DATA_PATH)
+
+if os.path.exists(USER_DATA_PATH):
+    df_user = pd.read_csv(USER_DATA_PATH)
+    df = pd.concat([df_base, df_user], ignore_index=True)
+else:
+    df = df_base
 
 
 # your function to assign color
@@ -211,12 +218,6 @@ fig = go.Figure(data=[edge_trace, node_trace],
                     width=1400,  # Set the fixed width
                     height=800))  # Set the fixed height
 
-fig.write_html('index.html', full_html=False, include_plotlyjs='cdn')
-
-# Save the plot as an HTML file
-config = {'displayModeBar': True}
-fig.write_html('index.html', full_html=False, include_plotlyjs='cdn')
-
 # Print the number of nodes in each role
 role_counts = df['Role'].value_counts()
 print(role_counts)
@@ -259,8 +260,11 @@ html_string = f"""
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
+    <nav>
+        <a href="tci_test.html">Take the TCI questionnaire</a>
+    </nav>
     <div id="affinitree-plot"></div>
-    <div id="radial-chart-container"></div> <!-- Add this line -->
+    <div id="radial-chart-container"></div>
     <script id="plot-data" type="application/json">{fig.to_json()}</script>
     <script src="affinitree.js"></script>
 </body>

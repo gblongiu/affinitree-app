@@ -14,15 +14,21 @@
   <h1>TCI Questionnaire</h1>
   <form id="tci-form">
     <div>
-      <label for="userId">Unique Identifier:</label>
-      <input type="text" id="userId" name="userId" required>
+      <label for="userId">Username or handle to show on the graph:</label>
+      <input
+        type="text"
+        id="userId"
+        name="userId"
+        required
+        placeholder="Pick a short unique name"
+      >
     </div>
     <div id="questions"></div>
     <button type="submit">Submit</button>
   </form>
 
 <script>
-fetch('questions.json')
+fetch('/questions.json')
   .then(r => r.json())
   .then(data => {
     const container = document.getElementById('questions');
@@ -60,7 +66,7 @@ document.getElementById('tci-form').addEventListener('submit', function(e) {
       alert('Please answer all questions.');
       return;
     }
-    answers.push(checked.value);
+    answers.push(parseInt(checked.value, 10));
   }
   fetch('/submit_test', {
     method: 'POST',
