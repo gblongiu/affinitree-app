@@ -22,7 +22,7 @@ The core visualization consists of these source files:
 - `affinitree.js`: A JavaScript file that enhances the interactivity of the Plotly graph.
 - `Neuma_TCI_Score.csv`: The dataset containing TCI personality scores used for clustering and visualization.
 
-Running `affinitreeBeta.py` generates an `index.html` file that showcases the interactive graph. This HTML file is build output and is not tracked in the repository; you can recreate it locally by running the script.
+Running affinitreeBeta.py generates an index.html file that showcases the interactive graph. In this repository, index.html is checked in so that GitHub Pages can serve a live demo, but you can still regenerate it locally by running the script (which will overwrite the existing file).
 
 ### Mathematical Operations
 
@@ -111,7 +111,7 @@ If you have not installed the required libraries yet, you can do so via `pip`:
 
     python affinitreeBeta.py
 
-The script reads the data from `Neuma_TCI_Score.csv`, performs hierarchical clustering, and generates an interactive graph visualization of the clustered data. The resulting Plotly figure is saved as `index.html` in the current directory.
+The script reads the data from Neuma_TCI_Score.csv, performs hierarchical clustering, and generates an interactive graph visualization of the clustered data. The resulting Plotly figure is saved as index.html in the current directory (the same file that is committed in this repo and used by GitHub Pages).
 
 Open `index.html` in a web browser to view and interact with the graph. Click on a node to view a radial bar chart of the individual's personality traits.
 
