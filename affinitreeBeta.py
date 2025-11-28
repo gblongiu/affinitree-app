@@ -18,13 +18,26 @@ import plotly.offline as pyo
 
 print(os.getcwd())
 
-BASE_DATA_PATH = "Neuma_TCI_Score.csv"
-USER_DATA_PATH = "Neuma_TCI_Score_user.csv"
+BASE_DATA_PATH = "Neuma_TCI_Score.xlsx"
+USER_DATA_PATH = "Neuma_TCI_Score_user.xlsx"
 
-df_base = pd.read_csv(BASE_DATA_PATH)
+
+def load_table(path):
+    ext = os.path.splitext(path)[1].lower()
+    if ext in {".xlsx", ".xlsm", ".xls"}:
+        # read Excel, using stored values of formulas
+        return pd.read_excel(path, engine="openpyxl")
+    elif ext == ".csv":
+        # still works if you ever switch back to CSV
+        return pd.read_csv(path)
+    else:
+        raise ValueError(f"Unsupported file type for {path!r}")
+
+
+df_base = load_table(BASE_DATA_PATH)
 
 if os.path.exists(USER_DATA_PATH):
-    df_user = pd.read_csv(USER_DATA_PATH)
+    df_user = load_table(USER_DATA_PATH)
     df = pd.concat([df_base, df_user], ignore_index=True)
 else:
     df = df_base
