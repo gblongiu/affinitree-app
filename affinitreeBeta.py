@@ -28,7 +28,6 @@ def load_table(path: str) -> pd.DataFrame:
     if not os.path.exists(path):
         raise FileNotFoundError(f"{path!r} does not exist in {os.getcwd()!r}")
     if ext in {".xlsx", ".xlsm", ".xls"}:
-        # We only need raw item scores; totals are recomputed in Python.
         return pd.read_excel(path, engine="openpyxl")
     elif ext == ".csv":
         return pd.read_csv(path)
@@ -278,10 +277,16 @@ def get_edge_trace(input_graph: nx.Graph, input_layout: dict) -> go.Scatter:
 
 
 def get_node_trace(input_graph: nx.Graph, input_layout: dict) -> go.Scatter:
+    """
+    Build the node trace AND attach the correct radial chart image
+    for each node by matching on Identifier.
+    """
     node_x = []
     node_y = []
     node_colors = []
     node_text = []
+    node_custom = []
+
     for node in input_graph.nodes():
         x, y = input_layout[node]
         node_x.append(x)
@@ -289,12 +294,21 @@ def get_node_trace(input_graph: nx.Graph, input_layout: dict) -> go.Scatter:
         node_colors.append(input_graph.nodes[node]["color"])
         node_text.append(f"{node} ({input_graph.nodes[node]['role']})")
 
+        # Align customdata explicitly to the same node order using Identifier
+        idx_list = df.index[df["Identifier"] == node].tolist()
+        if idx_list:
+            idx = idx_list[0]
+            node_custom.append(create_radial_bar_chart(df, idx))
+        else:
+            node_custom.append(None)
+
     return go.Scatter(
         x=node_x,
         y=node_y,
         mode="markers",
         text=node_text,
         hoverinfo="text",
+        customdata=node_custom,
         marker=dict(
             showscale=False,
             colorscale="YlGnBu",
@@ -309,17 +323,14 @@ def get_node_trace(input_graph: nx.Graph, input_layout: dict) -> go.Scatter:
 edge_trace = get_edge_trace(G, layout)
 node_trace = get_node_trace(G, layout)
 
-# Attach radial chart images as customdata for each node
-node_trace["customdata"] = df.index.map(lambda x: create_radial_bar_chart(df, x), na_action=None)
-
 # Update the hovertemplate
 node_trace["hovertemplate"] = "<b>%{text}</b><br><extra></extra>"
 
 fig = go.Figure(
     data=[edge_trace, node_trace],
     layout=go.Layout(
-        title=dict(text="Affinitree", x=0.5),
-        titlefont=dict(size=26),
+        # font now lives inside the title dict
+        title=dict(text="Affinitree", x=0.5, font=dict(size=26)),
         showlegend=False,
         hovermode="closest",
         margin=dict(b=20, l=5, r=5, t=40),
@@ -332,6 +343,7 @@ fig = go.Figure(
     ),
 )
 
+# Print the number of nodes in each role
 role_counts = df["Role"].value_counts()
 print(role_counts)
 
