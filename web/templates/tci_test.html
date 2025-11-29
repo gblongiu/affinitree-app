@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCI Questionnaire</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      margin-top: 0;
+    }
+    form div {
+      margin-bottom: 16px;
+    }
+    .question {
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    .options label {
+      margin-right: 10px;
+    }
+    .meta {
+      font-size: 0.85em;
+      color: #555;
+      margin-top: 4px;
+    }
+    .status {
+      margin-top: 10px;
+      font-size: 0.9em;
+    }
+    .status.error {
+      color: #c00;
+    }
+    .status.success {
+      color: #060;
+    }
+    .status.info {
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>TCI Questionnaire</h1>
+
+  <form id="tci-form">
+    <div>
+      <label for="userId">Username or handle to show on the graph:</label>
+      <input
+        type="text"
+        id="userId"
+        name="userId"
+        required
+        placeholder="Pick a short unique name"
+      >
+    </div>
+
+    <div id="questions"></div>
+
+    <button type="submit">Submit</button>
+
+    <div id="status" class="status info">
+      Questions will appear here once they are loaded.
+    </div>
+  </form>
+
+<script>
+  const questionsContainerElement = document.getElementById("questions");
+  const statusElement = document.getElementById("status");
+  const formElement = document.getElementById("tci-form");
+  const userIdInputElement = document.getElementById("userId");
+
+  let questionnaireQuestions = [];
+
+  function setStatus(text, kind) {
+    statusElement.textContent = text;
+    statusElement.className = "status " + (kind || "info");
+  }
+
+  function renderQuestions() {
+    questionsContainerElement.innerHTML = "";
+
+    if (!questionnaireQuestions.length) {
+      setStatus("No questions available.", "error");
+      return;
+    }
+
+    questionnaireQuestions.forEach(function (question) {
+      const questionWrapperElement = document.createElement("div");
+      questionWrapperElement.className = "question";
+
+      const questionTextElement = document.createElement("p");
+      questionTextElement.textContent = question.id + ". " + question.text;
+      questionWrapperElement.appendChild(questionTextElement);
+
+      const optionsContainerElement = document.createElement("div");
+      optionsContainerElement.className = "options";
+
+      const scaleMinimum = question.scale_min || 1;
+      const scaleMaximum = question.scale_max || 5;
+
+      for (let value = scaleMinimum; value <= scaleMaximum; value = value + 1) {
+        const labelElement = document.createElement("label");
+        const inputElement = document.createElement("input");
+
+        inputElement.type = "radio";
+        inputElement.name = "q-" + String(question.id);
+        inputElement.value = String(value);
+
+        labelElement.appendChild(inputElement);
+        labelElement.appendChild(
+          document.createTextNode(" " + String(value) + " ")
+        );
+        optionsContainerElement.appendChild(labelElement);
+      }
+
+      questionWrapperElement.appendChild(optionsContainerElement);
+
+      const metaElement = document.createElement("div");
+      metaElement.className = "meta";
+      const traitCodeText = String(question.trait || "").toUpperCase();
+      const reverseScoredText = question.reverse_scored ? "reverse scored" : "direct scored";
+      metaElement.textContent =
+        "Trait: " + traitCodeText + " • " + reverseScoredText +
+        " • Scale " + scaleMinimum + " to " + scaleMaximum;
+      questionWrapperElement.appendChild(metaElement);
+
+      questionsContainerElement.appendChild(questionWrapperElement);
+    });
+
+    setStatus("Please answer all questions and then click Submit.", "info");
+  }
+
+  function loadQuestions() {
+    setStatus("Loading questions…", "info");
+
+    fetch("/api/questions")
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error("Server returned status " + String(response.status));
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.questions)) {
+          throw new Error("Unexpected questionnaire format");
+        }
+        questionnaireQuestions = data.questions;
+        renderQuestions();
+      })
+      .catch(function (error) {
+        console.error(error);
+        setStatus("Could not load questions. Please try again later.", "error");
+      });
+  }
+
+  formElement.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const userId = userIdInputElement.value.trim();
+    if (!userId) {
+      setStatus("Please provide a username or handle.", "error");
+      return;
+    }
+
+    if (!questionnaireQuestions.length) {
+      setStatus("Questions are not loaded yet.", "error");
+      return;
+    }
+
+    const answersById = {};
+    for (let index = 0; index < questionnaireQuestions.length; index = index + 1) {
+      const question = questionnaireQuestions[index];
+      const nameAttribute = "q-" + String(question.id);
+      const checkedElement = document.querySelector(
+        'input[name="' + nameAttribute + '"]:checked'
+      );
+
+      if (!checkedElement) {
+        alert("Please answer question " + String(question.id) + " before submitting.");
+        return;
+      }
+
+      const numericValue = parseInt(checkedElement.value, 10);
+      if (!Number.isFinite(numericValue)) {
+        setStatus("Invalid response for question " + String(question.id) + ".", "error");
+        return;
+      }
+
+      answersById[String(question.id)] = numericValue;
+    }
+
+    const payload = {
+      answers: answersById,
+      metadata: {
+        name: userId
+      }
+    };
+
+    setStatus("Submitting responses…", "info");
+
+    fetch("/api/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          return response.json().catch(function () { return {}; }).then(function (body) {
+            const errorMessage = body.error || ("Submission failed with status " + String(response.status));
+            throw new Error(errorMessage);
+          });
+        }
+        return response.json();
+      })
+      .then(function (body) {
+        console.log("Submission response:", body);
+        setStatus(
+          "Responses submitted successfully. Your trait scores have been recorded.",
+          "success"
+        );
+        formElement.reset();
+      })
+      .catch(function (error) {
+        console.error(error);
+        setStatus(
+          "There was a problem submitting your responses. Please try again.",
+          "error"
+        );
+      });
+  });
+
+  loadQuestions();
+</script>
+</body>
+</html>

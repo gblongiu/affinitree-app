@@ -295,5 +295,5 @@ html_string = f"""
 
 
 # Save the html_string to a file named index.html
-with open('index.html', 'w') as f:
+with open('web/templates/index.html', 'w') as f:
     f.write(html_string)
