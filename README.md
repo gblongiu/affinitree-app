@@ -1,143 +1,266 @@
-## Affinitree Visualization Project
+# Affinitree
 
-Table of Contents
+Affinitree is an interactive visualization and questionnaire system for Temperament and Character Inventory (TCI) data. It turns raw TCI scores into a two dimensional forest of nodes where each person is a tree. Clicking a node shows a radial profile of temperament and character traits, and the layout lets you see who is shaped most similarly at a glance.
 
-1. [Affinitree](#affinitree)
-2. [Mathematical Operations](#mathematical-operations)
-   - [Normalization](#normalization)
-   - [Distance Calculation](#distance-calculation)
-   - [Dimensionality Reduction](#dimensionality-reduction)
-3. [TCI Questionnaire Web App](#tci-questionnaire-web-app)
-4. [How to Run](#how-to-run)
-5. [Acknowledgements](#acknowledgements)
-6. [License](#license)
+Affinitree is built as a small Python package plus a Flask web app. The core pipeline is:
 
-### Affinitree
+1. Load base TCI scores and optional user scores  
+2. Normalize trait scores and compute pairwise distances  
+3. Embed individuals into 2D space with multidimensional scaling (MDS)  
+4. Cluster individuals and assign roles such as Root, Trunk, Branch, Leaf  
+5. Build an interactive Plotly figure plus radial trait charts  
+6. Serve the visualization and questionnaire through a web interface  
 
-Affinitree is an interactive data visualization project that uses the Plotly Python graphing library. It utilizes a hierarchical clustering algorithm to categorize data and constructs a graph of interconnected nodes from the results. Each node represents an individual with certain character traits. By clicking on a node, a radial bar chart, which displays the individual's character traits, pops up.
+---
 
-The core visualization consists of these source files:
+## Features
 
-- `affinitreeBeta.py`: The primary Python script performing data preprocessing, clustering, graph creation, and radial bar chart generation.
-- `affinitree.js`: A JavaScript file that enhances the interactivity of the Plotly graph.
-- `Neuma_TCI_Score.csv`: The dataset containing TCI personality scores used for clustering and visualization.
+- Interactive Plotly graph of all respondents  
+- Clickable nodes that show a radial bar chart of temperament and character  
+- Hierarchical clustering into four high level roles  
+- Simple TCI questionnaire web app backed by Flask  
+- Regenerates the visualization when new scores are added  
+- Data science pipeline split into reusable modules  
 
-Running affinitreeBeta.py generates an index.html file that showcases the interactive graph. In this repository, index.html is checked in so that GitHub Pages can serve a live demo, but you can still regenerate it locally by running the script (which will overwrite the existing file).
+---
 
-### Mathematical Operations
+## Repository layout
 
-The Affinitree visualization tool computes distances between individuals based on their TCI personality test scores. The process includes the following steps:
+The project is structured as a small package plus a web layer.
 
-#### Normalization
+    affinitree-app/
+      README.md
+      requirements.txt
 
-The raw TCI scores are normalized using the `MinMaxScaler` from the `sklearn` library. This scaling transforms each score to a range between 0 and 1, which ensures that each dimension contributes equally to the distance calculation.
+      data/
+        Neuma_TCI_Score.xlsx          # base TCI scores
+        Neuma_TCI_Score_user.xlsx     # optional user scores
+        fullQuestionnare.txt          # raw questionnaire text
+        questions.json                # parsed questionnaire
+
+      src/
+        affinitree/
+          __init__.py
+          config.py                   # paths, constants, trait metadata
+          data_io.py                  # load and merge score tables
+          preprocessing.py            # normalization and feature selection
+          similarity.py               # distance matrix construction
+          embedding.py                # MDS or other 2D embedding
+          graph.py                    # networkx graph and clustering logic
+          radial_chart.py             # Matplotlib radial chart generation
+          figure.py                   # Plotly figure construction
+          html_builder.py             # fig -> full index.html string
+
+      web/
+        app.py                        # Flask application
+        templates/
+          index.html                  # visualization shell
+          tci_test.html               # questionnaire UI
+        static/
+          js/
+            affinitree.js             # client side interactions
+          css/
+            style.css                 # optional styling
+
+      scripts/
+        build_affinitree.py           # CLI to regenerate index.html
+        convert_questions.py          # fullQuestionnare.txt -> questions.json
+---
+
+## Installation
+
+### Prerequisites
+
+- Python 3.10 or newer  
+- Git  
+- A virtual environment tool such as `venv`  
+
+### Setup
+
+Clone the repository and install dependencies into a virtual environment.
+
+    git clone https://github.com/<your-user>/affinitree-app.git
+    cd affinitree-app
+
+    python -m venv .venv
+    source .venv/bin/activate        # Windows: .venv\Scripts\activate
+
+    pip install --upgrade pip
+    pip install -r requirements.txt
+
+---
+
+## Data inputs
+
+Affinitree expects TCI score tables in the `data/` directory.
+
+- `Neuma_TCI_Score.xlsx`  
+  - Base dataset of TCI scores  
+  - One row per individual  
+  - Columns for trait totals such as `NS Total`, `HA Total`, `RD Total`, `P Total`, `SD Total`, `CO Total`, `ST Total` plus any subscales used for the radial chart  
+
+- `Neuma_TCI_Score_user.xlsx` (optional)  
+  - Additional rows for new questionnaire submissions  
+  - Same schema as the base file  
+
+The questionnaire system uses:
+
+- `data/fullQuestionnare.txt` as the human editable source  
+- `data/questions.json` as the structured representation consumed by the web app  
+
+You can regenerate `questions.json` after editing the text file.
+
+    python scripts/convert_questions.py
+
+---
+
+## How the math works
+
+The Affinitree pipeline uses standard tools from the scientific Python stack.
+
+### Normalization
+
+Trait columns are normalized so that each dimension contributes fairly to distance calculations. By default Affinitree applies `MinMaxScaler` from scikit learn across selected trait totals.
 
     from sklearn.preprocessing import MinMaxScaler
 
-    columns_to_normalize = [...]  # List of columns to normalize
     scaler = MinMaxScaler()
-    df_normalized = pd.DataFrame(
-        scaler.fit_transform(df[columns_to_normalize]),
-        columns=columns_to_normalize
+    df_norm = pd.DataFrame(
+        scaler.fit_transform(df[trait_columns]),
+        columns=trait_columns,
+        index=df.index,
     )
 
-#### Distance Calculation
+You can change the set of traits or the scaling strategy in `preprocessing.py` and `config.py`.
 
-Pairwise distances are computed between every pair of individuals using the Euclidean distance metric. The `pairwise_distances` function from `sklearn.metrics` is used for this computation. The Euclidean distance formula is:
+### Distance calculation
 
-distance(P, Q) = sqrt((x1 - y1)^2 + (x2 - y2)^2 + ... + (xn - yn)^2)
-
-where P and Q are the normalized TCI score vectors for two individuals.
+Pairwise distances between individuals are computed with `pairwise_distances` from `sklearn.metrics`. The default metric is Euclidean distance on normalized trait totals.
 
     from sklearn.metrics import pairwise_distances
 
-    similarity_matrix = pairwise_distances(df_normalized)
+    distance_matrix = pairwise_distances(df_norm.values, metric="euclidean")
 
-#### Dimensionality Reduction
+The distance metric and any weights are configurable. This makes it possible to experiment with correlation or cosine distance if you want to focus on pattern rather than absolute level.
 
-Multidimensional scaling (MDS) is used to reduce the dimensionality of the data from the original number of TCI dimensions to two dimensions. This is achieved using the `MDS` function from the `sklearn.manifold` library. MDS aims to preserve the pairwise distances between the data points while reducing the dimensions, allowing for a meaningful visualization in 2D space.
+### Dimensionality reduction
+
+To visualize the high dimensional trait space the project uses multidimensional scaling to embed individuals into two dimensions while trying to preserve pairwise distances.
 
     from sklearn.manifold import MDS
 
-    mds = MDS(n_components=2, dissimilarity="precomputed", random_state=42)
-    pos = mds.fit_transform(similarity_matrix)
+    mds = MDS(
+        n_components=2,
+        dissimilarity="precomputed",
+        random_state=42,
+    )
+    coords = mds.fit_transform(distance_matrix)
 
-With these mathematical operations, the Affinitree visualization tool calculates distances using the Euclidean distance formula and generates a 2D representation of the hierarchical data based on individuals' TCI personality test scores.
+The resulting coordinates are used as node positions in the graph. Other embedding methods can be added in `embedding.py`.
 
----
+### Clustering and roles
 
-## TCI Questionnaire Web App
-
-In addition to the visualization, this repo includes a simple web app for administering and scoring a multiple choice TCI questionnaire.
-
-Key files:
-
-- `app.py`: A Flask application that serves the questionnaire UI, exposes endpoints to load questions, accepts submitted answers, and computes scores.
-- `tci_test.html`: The main HTML page for the questionnaire. It loads questions dynamically and posts responses back to the backend.
-- `questions.json`: A structured JSON file containing the TCI questions and options used by the web app.
-- `fullQuestionnare.txt`: The original raw questionnaire text used as the source for `questions.json`.
-- `convert_questions.py`: A helper script that converts `fullQuestionnare.txt` into `questions.json`, making it easy to regenerate or update the questionnaire.
-
-Typical flow:
-
-1. Maintain or edit the questionnaire in `fullQuestionnare.txt`.
-2. Run `convert_questions.py` to regenerate `questions.json`.
-3. Start the Flask app (`app.py`) and open the questionnaire page in a browser.
-4. Answer the questions and submit to view scores or feedback.
+Hierarchical clustering groups individuals into a small number of clusters which are labeled with high level roles such as Root, Trunk, Branch, Leaf. This is implemented in `graph.py` with `AgglomerativeClustering` from scikit learn and then stored as node metadata on the networkx graph.
 
 ---
 
-## How to Run
+## Radial trait chart
 
-The project runs in Python 3.9+ and uses the following libraries:
+Each node has a radial bar chart that summarizes temperament and character traits.
 
-- pandas  
-- numpy  
-- networkx  
-- matplotlib  
-- scikit-learn  
-- plotly  
-- flask  
+Temperament:
 
-Standard library modules such as `base64` and `os` are also used but do not require installation.
+- P  Persistence  
+- HA Harm Avoidance  
+- NS Novelty Seeking  
+- RD Reward Dependence  
 
-### Install dependencies
+Character:
 
-If you have not installed the required libraries yet, you can do so via `pip`:
+- CO Cooperativeness  
+- ST Self Transcendence  
+- SD Self Directedness  
 
-    pip install pandas numpy networkx matplotlib scikit-learn plotly flask
+`radial_chart.py` converts one row of trait totals into a Matplotlib polar plot and returns a base64 encoded PNG that is attached to the Plotly node as custom data. When you click a node the front end displays this chart next to the graph.
 
-### Run the Affinitree visualization
+---
 
-    python affinitreeBeta.py
+## Running the Affinitree visualization
 
-The script reads the data from Neuma_TCI_Score.csv, performs hierarchical clustering, and generates an interactive graph visualization of the clustered data. The resulting Plotly figure is saved as index.html in the current directory (the same file that is committed in this repo and used by GitHub Pages).
+You can regenerate the static visualization from the command line. This reads the data files, rebuilds the entire graph, and writes `index.html` to the project root.
 
-Open `index.html` in a web browser to view and interact with the graph. Click on a node to view a radial bar chart of the individual's personality traits.
+    source .venv/bin/activate
+    python scripts/build_affinitree.py
 
-### Run the TCI questionnaire app
+After the script completes, open `index.html` in a browser and interact with the graph. Click on any node to see its radial trait chart.
 
-    python app.py
+If you host the repository through GitHub Pages, commit and push the new `index.html` to update the live demo.
 
-By default, the Flask server will listen on `http://127.0.0.1:5000`. Open that URL in a web browser to access the questionnaire UI.
+---
 
-1. Load the questionnaire page (served by `tci_test.html`).
-2. Answer all questions shown.
-3. Submit your responses to have them scored by the backend.
-4. Review the returned scores or results.
+## Running the TCI questionnaire web app
 
-If you modify `fullQuestionnare.txt`, rerun `convert_questions.py` before restarting the app so that `questions.json` stays in sync.
+The Flask app serves the questionnaire and can append new results to the user score table, then trigger a rebuild of the visualization.
 
-The code is documented and designed to be customizable. If you encounter issues, confirm that your Python environment has all necessary packages installed and that you are running the commands from the project directory.
+1. Make sure dependencies are installed and the virtual environment is active.  
+2. Start the server.
+
+       python web/app.py
+
+3. Open the questionnaire in your browser.
+
+       http://127.0.0.1:5000/tci
+
+4. Complete the TCI questionnaire and submit answers.  
+5. The backend scores the responses, writes them into `Neuma_TCI_Score_user.xlsx` or another configured store, and may call the Affinitree pipeline to regenerate the graph.
+
+The exact scoring logic lives in `web/app.py` and uses `data/questions.json` as the source of truth for question metadata.
+
+---
+
+## Configuration
+
+Several aspects of Affinitree can be adjusted without editing the entire pipeline.
+
+Look in `src/affinitree/config.py` for:
+
+- Paths to base and user score files  
+- The list of trait columns used for distance and for the radial chart  
+- Number of clusters and their role labels  
+- Default distance metric and embedding method  
+
+You can also parameterize the pipeline further by passing a configuration object into the functions in `data_io.py`, `preprocessing.py`, and `embedding.py`.
+
+---
+
+## Development
+
+To work on the project itself:
+
+1. Install dependencies.
+
+       pip install -r requirements.txt
+
+2. Run the pipeline on a small sample to confirm your environment.
+
+       python scripts/build_affinitree.py
+
+3. Start the Flask app during development.
+
+       export FLASK_APP=web.app
+       export FLASK_ENV=development
+       flask run
+
+4. Consider adding tests under `tests/` and wiring up continuous integration through GitHub Actions so that the pipeline and questionnaire scoring are exercised on every push.
 
 ---
 
 ## Acknowledgements
 
-This project is a creation by **Affinitree1 & Friends**.
+Affinitree is a creation by Affinitree1 and friends. The project stands on the shoulders of many open source libraries, especially NumPy, pandas, scikit learn, networkx, Matplotlib, Plotly, and Flask.
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License**. See the `LICENSE` file for details.
+This project is licensed under the MIT License. See the `LICENSE` file for details.
