@@ -1,0 +1,432 @@
+{
+  "source": "data/Neuma_TCI_Score.xlsx",
+  "sample": "Baseline workbook only; optional questionnaire submissions excluded",
+  "analysis_type": "Exploratory cross-sectional analysis",
+  "record_count": 50,
+  "subscale_count": 29,
+  "trait_count": 7,
+  "traits": [
+    {
+      "code": "NS",
+      "name": "Novelty Seeking",
+      "subscales": 4
+    },
+    {
+      "code": "HA",
+      "name": "Harm Avoidance",
+      "subscales": 4
+    },
+    {
+      "code": "RD",
+      "name": "Reward Dependence",
+      "subscales": 4
+    },
+    {
+      "code": "P",
+      "name": "Persistence",
+      "subscales": 4
+    },
+    {
+      "code": "SD",
+      "name": "Self-Directedness",
+      "subscales": 5
+    },
+    {
+      "code": "CO",
+      "name": "Cooperativeness",
+      "subscales": 5
+    },
+    {
+      "code": "ST",
+      "name": "Self-Transcendence",
+      "subscales": 3
+    }
+  ],
+  "profile_pairs": 1225,
+  "correlation_tests": 21,
+  "fdr_significant": 9,
+  "correlation_matrix": [
+    [
+      1.0,
+      -0.24151,
+      0.23833,
+      -0.19117,
+      -0.21759,
+      -0.22387,
+      0.00049
+    ],
+    [
+      -0.24151,
+      1.0,
+      -0.08932,
+      -0.57508,
+      -0.57357,
+      -0.34085,
+      -0.35506
+    ],
+    [
+      0.23833,
+      -0.08932,
+      1.0,
+      0.01477,
+      -0.15307,
+      0.23082,
+      0.13449
+    ],
+    [
+      -0.19117,
+      -0.57508,
+      0.01477,
+      1.0,
+      0.56149,
+      0.4659,
+      0.63016
+    ],
+    [
+      -0.21759,
+      -0.57357,
+      -0.15307,
+      0.56149,
+      1.0,
+      0.46103,
+      0.31128
+    ],
+    [
+      -0.22387,
+      -0.34085,
+      0.23082,
+      0.4659,
+      0.46103,
+      1.0,
+      0.51246
+    ],
+    [
+      0.00049,
+      -0.35506,
+      0.13449,
+      0.63016,
+      0.31128,
+      0.51246,
+      1.0
+    ]
+  ],
+  "correlations": [
+    {
+      "a": "NS",
+      "b": "HA",
+      "r": -0.24151,
+      "p": 0.0911006,
+      "q": 0.16723636,
+      "fdr_significant": false
+    },
+    {
+      "a": "NS",
+      "b": "RD",
+      "r": 0.23833,
+      "p": 0.09556363,
+      "q": 0.16723636,
+      "fdr_significant": false
+    },
+    {
+      "a": "NS",
+      "b": "P",
+      "r": -0.19117,
+      "p": 0.1835519,
+      "q": 0.24091186,
+      "fdr_significant": false
+    },
+    {
+      "a": "NS",
+      "b": "SD",
+      "r": -0.21759,
+      "p": 0.1290313,
+      "q": 0.18064382,
+      "fdr_significant": false
+    },
+    {
+      "a": "NS",
+      "b": "CO",
+      "r": -0.22387,
+      "p": 0.11807497,
+      "q": 0.17711246,
+      "fdr_significant": false
+    },
+    {
+      "a": "NS",
+      "b": "ST",
+      "r": 0.00049,
+      "p": 0.99730364,
+      "q": 0.99730364,
+      "fdr_significant": false
+    },
+    {
+      "a": "HA",
+      "b": "RD",
+      "r": -0.08932,
+      "p": 0.53734686,
+      "q": 0.59390969,
+      "fdr_significant": false
+    },
+    {
+      "a": "HA",
+      "b": "P",
+      "r": -0.57508,
+      "p": 1.253e-05,
+      "q": 9.354e-05,
+      "fdr_significant": true
+    },
+    {
+      "a": "HA",
+      "b": "SD",
+      "r": -0.57357,
+      "p": 1.336e-05,
+      "q": 9.354e-05,
+      "fdr_significant": true
+    },
+    {
+      "a": "HA",
+      "b": "CO",
+      "r": -0.34085,
+      "p": 0.01542504,
+      "q": 0.03599177,
+      "fdr_significant": true
+    },
+    {
+      "a": "HA",
+      "b": "ST",
+      "r": -0.35506,
+      "p": 0.0114012,
+      "q": 0.02992815,
+      "fdr_significant": true
+    },
+    {
+      "a": "RD",
+      "b": "P",
+      "r": 0.01477,
+      "p": 0.91889809,
+      "q": 0.96484299,
+      "fdr_significant": false
+    },
+    {
+      "a": "RD",
+      "b": "SD",
+      "r": -0.15307,
+      "p": 0.28856438,
+      "q": 0.35646188,
+      "fdr_significant": false
+    },
+    {
+      "a": "RD",
+      "b": "CO",
+      "r": 0.23082,
+      "p": 0.10679983,
+      "q": 0.17252281,
+      "fdr_significant": false
+    },
+    {
+      "a": "RD",
+      "b": "ST",
+      "r": 0.13449,
+      "p": 0.35177405,
+      "q": 0.41040306,
+      "fdr_significant": false
+    },
+    {
+      "a": "P",
+      "b": "SD",
+      "r": 0.56149,
+      "p": 2.213e-05,
+      "q": 0.00011616,
+      "fdr_significant": true
+    },
+    {
+      "a": "P",
+      "b": "CO",
+      "r": 0.4659,
+      "p": 0.00065021,
+      "q": 0.00225959,
+      "fdr_significant": true
+    },
+    {
+      "a": "P",
+      "b": "ST",
+      "r": 0.63016,
+      "p": 9.4e-07,
+      "q": 1.974e-05,
+      "fdr_significant": true
+    },
+    {
+      "a": "SD",
+      "b": "CO",
+      "r": 0.46103,
+      "p": 0.0007532,
+      "q": 0.00225959,
+      "fdr_significant": true
+    },
+    {
+      "a": "SD",
+      "b": "ST",
+      "r": 0.31128,
+      "p": 0.02777683,
+      "q": 0.05833135,
+      "fdr_significant": false
+    },
+    {
+      "a": "CO",
+      "b": "ST",
+      "r": 0.51246,
+      "p": 0.00014202,
+      "q": 0.00059649,
+      "fdr_significant": true
+    }
+  ],
+  "strongest_pairs": [
+    {
+      "a": "P",
+      "b": "ST",
+      "r": 0.63016,
+      "p": 9.4e-07,
+      "q": 1.974e-05,
+      "fdr_significant": true
+    },
+    {
+      "a": "HA",
+      "b": "P",
+      "r": -0.57508,
+      "p": 1.253e-05,
+      "q": 9.354e-05,
+      "fdr_significant": true
+    },
+    {
+      "a": "HA",
+      "b": "SD",
+      "r": -0.57357,
+      "p": 1.336e-05,
+      "q": 9.354e-05,
+      "fdr_significant": true
+    },
+    {
+      "a": "P",
+      "b": "SD",
+      "r": 0.56149,
+      "p": 2.213e-05,
+      "q": 0.00011616,
+      "fdr_significant": true
+    },
+    {
+      "a": "CO",
+      "b": "ST",
+      "r": 0.51246,
+      "p": 0.00014202,
+      "q": 0.00059649,
+      "fdr_significant": true
+    }
+  ],
+  "projection": {
+    "source_dimensions": 7,
+    "target_dimensions": 2,
+    "method": "Metric SMACOF multidimensional scaling",
+    "distance": "Euclidean distance after min-max scaling each composite trait",
+    "distance_spearman": 0.89914,
+    "distance_pearson": 0.91464,
+    "stress_1": 0.20298,
+    "nearest_five_retained": 0.544,
+    "distance_bins": [
+      {
+        "original": 0.3778,
+        "embedded": 0.2389,
+        "pairs": 95
+      },
+      {
+        "original": 0.4914,
+        "embedded": 0.3503,
+        "pairs": 95
+      },
+      {
+        "original": 0.5505,
+        "embedded": 0.4347,
+        "pairs": 95
+      },
+      {
+        "original": 0.6035,
+        "embedded": 0.4928,
+        "pairs": 94
+      },
+      {
+        "original": 0.6574,
+        "embedded": 0.5906,
+        "pairs": 94
+      },
+      {
+        "original": 0.7157,
+        "embedded": 0.6362,
+        "pairs": 94
+      },
+      {
+        "original": 0.7668,
+        "embedded": 0.7532,
+        "pairs": 94
+      },
+      {
+        "original": 0.837,
+        "embedded": 0.7678,
+        "pairs": 94
+      },
+      {
+        "original": 0.8847,
+        "embedded": 0.873,
+        "pairs": 94
+      },
+      {
+        "original": 0.9412,
+        "embedded": 0.9567,
+        "pairs": 94
+      },
+      {
+        "original": 1.0087,
+        "embedded": 1.0275,
+        "pairs": 94
+      },
+      {
+        "original": 1.1242,
+        "embedded": 1.1742,
+        "pairs": 94
+      },
+      {
+        "original": 1.3454,
+        "embedded": 1.4412,
+        "pairs": 94
+      }
+    ]
+  },
+  "clustering": {
+    "method": "Ward hierarchical clustering on scaled composite scores",
+    "solutions": {
+      "2": {
+        "silhouette": 0.24061,
+        "sizes": [
+          35,
+          15
+        ]
+      },
+      "4": {
+        "silhouette": 0.16013,
+        "sizes": [
+          15,
+          14,
+          12,
+          9
+        ]
+      }
+    }
+  },
+  "methods": {
+    "composites": "Sum existing subscale columns within each of seven TCI dimensions",
+    "scaling": "MinMaxScaler applied separately to each of seven composite traits",
+    "comparisons": "Upper triangle of the Euclidean distance matrix",
+    "associations": "Pearson correlations among the seven composite traits",
+    "multiplicity": "Benjamini-Hochberg correction across 21 exploratory tests, q < 0.05",
+    "stress": "sqrt(sum((original_distance - map_distance)^2) / sum(map_distance^2))",
+    "mds": "2 components, four random starts, seed 42, at most 300 iterations, tolerance 1e-6"
+  }
+}

@@ -11,6 +11,32 @@ Affinitree is built as a small Python package plus a Flask web app. The core pip
 5. Build an interactive Plotly figure plus radial trait charts  
 6. Serve the visualization and questionnaire through a web interface  
 
+
+## Exploratory cohort findings
+
+[Research presentation](https://gblongiu.github.io/affinitree-app/)
+
+**Design lineage:** Affinitree captures a single TCI profile as a fixed point in a similarity map. [Rhizome](https://gblongiu.github.io/rhizome-living-network/) develops the idea toward relationships and positions that may change over time. Its evolving-network scenes are illustrative; the cohort study contains no longitudinal observations. The seven colors retain their original trait meanings: Novelty Seeking (orange), Harm Avoidance (red), Reward Dependence (pink), Persistence (brown), Self-Directedness (blue), Cooperativeness (green), and Self-Transcendence (purple). · [Analysis implementation](scripts/research_analysis.py)
+
+I analyzed the 50 baseline score profiles in `data/Neuma_TCI_Score.xlsx`, aggregating 29 subscales into seven TCI composite dimensions. This cohort yields **1,225 distinct profile pairs** for distance-based comparison.
+
+- **Trait relationships:** Nine of 21 exploratory Pearson correlations remained below a 5% false-discovery-rate threshold after Benjamini–Hochberg adjustment. Persistence and Self-Transcendence showed the strongest observed association (*r* = 0.630).
+- **Dimensionality reduction:** Two-dimensional metric MDS preserved much of the rank ordering of seven-dimensional Euclidean distances (Spearman *ρ* = 0.899), with normalized Stress-1 = 0.203.
+- **Neighborhood preservation:** The 2D projection retained 54.4% of the original five-nearest-neighbor connections.
+- **Clustering diagnostic:** Four-group Ward clustering gave a silhouette score of 0.160, compared with 0.241 for a two-group solution. These clusters should not be interpreted as validated psychological types.
+
+The analysis is **exploratory**. The 50 profiles are not a representative population sample, subscale aggregation has not been independently validated against the instrument's scoring manual, and correlations do not establish causal or diagnostic claims. Questionnaire submissions are not included in these figures.
+
+To regenerate the published aggregate statistics and website:
+
+```bash
+python scripts/research_analysis.py
+python -m unittest discover -s tests -p 'test_research_analysis.py' -v
+python -m http.server 8000 --directory docs
+```
+
+The local preview is available at `http://localhost:8000/`. The website is a standalone static presentation; it does not depend on the questionnaire backend. GitHub Pages can serve it directly from the `docs/` folder on `main`.
+
 ---
 
 ## Features
@@ -227,7 +253,7 @@ Look in `src/affinitree/config.py` for:
 - Paths to base and user score files  
 - The list of trait columns used for distance and for the radial chart  
 - Number of clusters and their role labels  
-- Default distance metric and embedding method  
+- Default distance metrighc and embedding method  
 
 You can also parameterize the pipeline further by passing a configuration object into the functions in `data_io.py`, `preprocessing.py`, and `embedding.py`.
 
